@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+    <head></head>
+    <style>
+        #name{           
+            height:20px;
+            margin-left: 10px;
+            width: 200px;
+        }
+        #submit{
+            margin-left: 20px;
+        }
+        
+        #controls{
+            margin-top: 10px;
+            width:800px;
+        }
+        #window {
+            border: 1px solid black;
+            width:800px;
+            height:500px;
+            margin-top: 30px;
+        }
+        #sendButton{
+            margin-left: 280px;
+            margin-top: 10px;
+        }
+        #textarea{
+            margin-top: 10px;
+        }
+    </style>
+    <body>
+        <div id='nameDiv'>
+                Enter a Name:<input type='text' id='name'><button id='submit'>Submit</button>
+        </div>
+        <div id='controls'>
+            <div id='inputButton'>
+                <div>
+                    Enter your message:
+                </div>
+                
+                <!--<input type="text" id='message' style='width:350px;height:20px'>-->
+                <div id='textarea'>
+                    <textarea rows="4" cols="50" id='message'></textarea>
+                </div>
+                
+            </div>
+            <div id='sendButton'>
+                <button id='send'>Send</button>
+            </div>           
+        </div>
+
+        <div id="window">
+            <div id='viewArea'></div>
+            <div id='typingMessage'></div>
+        </div>             
+
+        <script src='socket.io.js'></script>
+        <script>
+            let socket=io.connect('http://localhost:3000/');
+            let submit=document.getElementById('submit');           
+            let send=document.getElementById('send');  
+            let textarea=document.getElementById('textarea');         
+            send.disabled=true;
+            let name;
+            let viewArea=document.getElementById('viewArea');   
+            let typingMessage=document.getElementById('typingMessage');
+
+            //submit action
+            submit.addEventListener('click',()=>{
+                send.disabled=false;
+                name=document.getElementById('name').value;
+            });
+
+            //send action
+            send.addEventListener('click',()=>{               
+                let message=document.getElementById('message').value;       
+                viewArea.innerHTML+='You: '+message+'<br>';    
+                socket.emit('message',{name:name,message:message});  
+                document.getElementById('message').value='';            
+            });
+
+            //key press event
+            textarea.addEventListener('keypress',()=>{
+                socket.emit('typing',{name:name,message:'is typing.....'})
+            });
+
+            //listen for events
+            socket.on('message',(data)=>{ 
+                
+                typingMessage.innerHTML='';             
+                viewArea.innerHTML+=`${data.name}:${data.message}`+'<br>';
+            });
+
+            //typing event
+            socket.on('typing',(data)=>{  
+                console.log('typing');
+                               
+                typingMessage.innerHTML=`<p><em>${data.name} is ${data.message}</em><p>`
+            })
+        </script>
+    </body>
+</html>
